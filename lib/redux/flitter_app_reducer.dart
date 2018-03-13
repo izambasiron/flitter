@@ -51,6 +51,7 @@ class FlitterAppReducer extends redux.ReducerClass<FlitterAppState> {
     FetchUser: _fetchUser,
     SelectRoomAction: _selectRoom,
     OnMessagesForCurrentRoom: _onMessages,
+    OnNewMessagesForCurrentRoom: _onNewMessages,
     OnSendMessage: _onSendMessage,
     OnDeletedMessageForCurrentRoom: _onDeletedMessageForCurrentRoom,
     FetchMessagesForCurrentRoomAction: _fetchMessages,
@@ -73,8 +74,8 @@ class FlitterAppReducer extends redux.ReducerClass<FlitterAppState> {
   }
 }
 
-FlitterAppState _unreadMessageForRoom(
-    FlitterAppState state, UnreadMessagesForRoom action) {
+FlitterAppState _unreadMessageForRoom(FlitterAppState state,
+    UnreadMessagesForRoom action) {
   if (action.roomId != null) {
     Room room = state.rooms.firstWhere((Room room) => room.id == action.roomId,
         orElse: orElseNull);
@@ -82,7 +83,7 @@ FlitterAppState _unreadMessageForRoom(
     room.unreadItems -= action.removeMessage;
 
     List<Room> rooms =
-        state.rooms.where((Room room) => room.id != action.roomId).toList();
+    state.rooms.where((Room room) => room.id != action.roomId).toList();
     rooms.add(room);
 
     return state.apply(rooms: _sortRooms(rooms));
@@ -90,15 +91,15 @@ FlitterAppState _unreadMessageForRoom(
   return state;
 }
 
-FlitterAppState _showSearchBar(
-    FlitterAppState state, ShowSearchBarAction action) {
+FlitterAppState _showSearchBar(FlitterAppState state,
+    ShowSearchBarAction action) {
   return state.apply(search: state.search.apply(searching: true, result: []));
 }
 
 FlitterAppState _startSearch(FlitterAppState state, StartSearchAction action) {
   return state.apply(
       search:
-          state.search.apply(searching: true, requesting: true, result: []));
+      state.search.apply(searching: true, requesting: true, result: []));
 }
 
 FlitterAppState _fetchSearch(FlitterAppState state, FetchSearchAction action) {
@@ -110,7 +111,7 @@ FlitterAppState _fetchSearch(FlitterAppState state, FetchSearchAction action) {
 FlitterAppState _endSearch(FlitterAppState state, EndSearchAction action) {
   return state.apply(
       search:
-          state.search.apply(searching: false, requesting: false, result: []));
+      state.search.apply(searching: false, requesting: false, result: []));
 }
 
 List<Room> _sortRooms(List<Room> rooms) {
@@ -150,23 +151,33 @@ FlitterAppState _fetchUser(FlitterAppState state, FetchUser action) {
 
 FlitterAppState _selectRoom(FlitterAppState state, SelectRoomAction action) {
   CurrentRoomState current =
-      new CurrentRoomState(room: action.room, messages: null);
+  new CurrentRoomState(room: action.room, messages: null);
   return state.apply(selectedRoom: current);
 }
 
-FlitterAppState _fetchMessages(
-    FlitterAppState state, FetchMessagesForCurrentRoomAction action) {
+FlitterAppState _fetchMessages(FlitterAppState state,
+    FetchMessagesForCurrentRoomAction action) {
   final currentRoom = state.selectedRoom?.apply(messages: action.messages);
   return state.apply(selectedRoom: currentRoom);
 }
 
-FlitterAppState _onMessages(
-    FlitterAppState state, OnMessagesForCurrentRoom action) {
+FlitterAppState _onMessages(FlitterAppState state,
+    OnMessagesForCurrentRoom action) {
   final messages = new List<Message>.from(action.messages);
   final messagesRooms =
-      new List<Message>.from(state.selectedRoom.messages ?? []);
+  new List<Message>.from(state.selectedRoom.messages ?? []);
   messages.addAll(messagesRooms ?? []);
   final currentRoom = state.selectedRoom?.apply(messages: messages);
+  return state.apply(selectedRoom: currentRoom);
+}
+
+FlitterAppState _onNewMessages(FlitterAppState state,
+    OnNewMessagesForCurrentRoom action) {
+  final messages = new List<Message>.from(action.messages);
+  final messagesRooms =
+  new List<Message>.from(state.selectedRoom.messages ?? []);
+  messagesRooms.addAll(messages ?? []);
+  final currentRoom = state.selectedRoom?.apply(messages: messagesRooms);
   return state.apply(selectedRoom: currentRoom);
 }
 
@@ -193,22 +204,23 @@ FlitterAppState _selectGroup(FlitterAppState state, SelectGroupAction action) {
   return state.apply(selectedGroup: current);
 }
 
-FlitterAppState _fetchRoomsOfGroup(
-    FlitterAppState state, FetchRoomsOfGroup action) {
+FlitterAppState _fetchRoomsOfGroup(FlitterAppState state,
+    FetchRoomsOfGroup action) {
   CurrentGroupState current = new CurrentGroupState(
       group: state.selectedGroup.group, rooms: action.rooms);
   return state.apply(selectedGroup: current);
 }
 
-FlitterAppState _onMessageForCurrentRoom(
-    FlitterAppState state, OnMessageForCurrentRoom action) {
+FlitterAppState _onMessageForCurrentRoom(FlitterAppState state,
+    OnMessageForCurrentRoom action) {
   Iterable<Message> messages = _addOrUpdateMessage(state, action.message);
 
   final currentRoom = state.selectedRoom?.apply(messages: messages);
   return state.apply(selectedRoom: currentRoom);
 }
 
-FlitterAppState _onDeletedMessageForCurrentRoom(FlitterAppState state, OnDeletedMessageForCurrentRoom action) {
+FlitterAppState _onDeletedMessageForCurrentRoom(FlitterAppState state,
+    OnDeletedMessageForCurrentRoom action) {
   Message message = action.message;
   List<Message> messages = new List.from(state.selectedRoom.messages ?? []);
 
@@ -222,7 +234,7 @@ Iterable<Message> _addOrUpdateMessage(FlitterAppState state, Message message) {
   List<Message> messages = new List.from(state.selectedRoom.messages ?? []);
 
   final exist =
-      messages.firstWhere((msg) => msg.id == message.id, orElse: orElseNull);
+  messages.firstWhere((msg) => msg.id == message.id, orElse: orElseNull);
 
   if (exist != null) {
     final idx = messages.indexOf(exist);

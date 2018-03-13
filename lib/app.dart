@@ -47,7 +47,7 @@ class App extends StatefulWidget {
   _AppState createState() => new _AppState();
 }
 
-class _AppState extends State<App> {
+class _AppState extends State<App> with WidgetsBindingObserver {
   var _subscription;
   var _themeSubscription;
 
@@ -62,9 +62,10 @@ class _AppState extends State<App> {
 
   @override
   void dispose() {
-    super.dispose();
+    WidgetsBinding.instance.removeObserver(this);
     _subscription.cancel();
     _themeSubscription.cancel();
+    super.dispose();
   }
 
   @override
@@ -82,6 +83,26 @@ class _AppState extends State<App> {
           GroupView.path: (BuildContext context) => new GroupView(),
           SettingsView.path: (BuildContext context) => new SettingsView()
         });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
+    switch (state) {
+      case AppLifecycleState.resumed:
+        final token = await FlitterAuth.getToken();
+        if (token != null) {
+          reconnectWebSocket(token.access);
+        }
+        break;
+      default:
+        break;
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
   }
 }
 

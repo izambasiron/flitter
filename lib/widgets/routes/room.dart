@@ -20,7 +20,7 @@ class RoomView extends StatefulWidget {
   _RoomViewState createState() => new _RoomViewState();
 }
 
-class _RoomViewState extends State<RoomView> {
+class _RoomViewState extends State<RoomView> with WidgetsBindingObserver {
   Iterable<Message> messages = flitterStore.state.selectedRoom.messages;
 
   Room get room => flitterStore.state.selectedRoom.room;
@@ -39,6 +39,7 @@ class _RoomViewState extends State<RoomView> {
     _fetchMessages();
 
     gitterSubscriber.subscribeToChatMessages(room.id, _onMessageHandler);
+    WidgetsBinding.instance.addObserver(this);
   }
 
   _onMessageHandler(List<GitterFayeMessage> msgs) {
@@ -63,9 +64,10 @@ class _RoomViewState extends State<RoomView> {
 
   @override
   void dispose() {
-    super.dispose();
     _subscription.cancel();
     gitterSubscriber.unsubscribeToChatMessages(room.id);
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 
   @override
@@ -88,9 +90,14 @@ class _RoomViewState extends State<RoomView> {
         _userHasJoined || messages == null ? null : _joinRoomButton());
   }
 
-  _fetchMessages() {
-    String id = messages?.isNotEmpty == true ? messages.first.id : null;
-    fetchMessagesOfRoom(room.id, id);
+  _fetchMessages([bool fetchBefore = true]) {
+    if (fetchBefore) {
+      String id = messages?.isNotEmpty == true ? messages.first.id : null;
+      fetchMessagesOfRoom(roomId: room.id, beforeId: id);
+    } else {
+      String id = messages?.isNotEmpty == true ? messages.last.id : null;
+      fetchMessagesOfRoom(roomId: room.id, afterId: id);
+    }
   }
 
   Widget _buildMenu() => new PopupMenuButton(
@@ -127,4 +134,15 @@ class _RoomViewState extends State<RoomView> {
 
   bool get _userHasJoined =>
       flitterStore.state.rooms.any((Room r) => r.id == room.id);
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.resumed:
+        _fetchMessages(false);
+        break;
+      default:
+        break;
+    }
+  }
 }

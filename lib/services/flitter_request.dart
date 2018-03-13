@@ -32,11 +32,15 @@ Future<Iterable<Room>> fetchRoomsOfGroup() async {
   return rooms;
 }
 
-Future<Iterable<Message>> fetchMessagesOfRoom(
-    String roomId, String beforeId) async {
+Future<Iterable<Message>> fetchMessagesOfRoom({
+    String roomId, String beforeId, String afterId}) async {
   final messages =
-      await gitterApi.room.messagesFromRoomId(roomId, beforeId: beforeId);
-  flitterStore.dispatch(new OnMessagesForCurrentRoom(messages));
+      await gitterApi.room.messagesFromRoomId(roomId, beforeId: beforeId, afterId: afterId);
+  if (afterId != null) {
+    flitterStore.dispatch(new OnNewMessagesForCurrentRoom(messages));
+  } else {
+    flitterStore.dispatch(new OnMessagesForCurrentRoom(messages));
+  }
   return messages;
 }
 
@@ -88,6 +92,12 @@ Future<GitterFayeSubscriber> initWebSocket(String token) async {
   await subscriber.connect();
   flitterStore.dispatch(new FetchUser(subscriber.user));
   return subscriber;
+}
+
+reconnectWebSocket(String token) async {
+  if (gitterSubscriber.isClose || !gitterSubscriber.isTicking) {
+    await gitterSubscriber.reset();
+  }
 }
 
 subscribeToUnreadMessages(List<Room> rooms) {
