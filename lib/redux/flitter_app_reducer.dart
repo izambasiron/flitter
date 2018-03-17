@@ -64,7 +64,8 @@ class FlitterAppReducer extends redux.ReducerClass<FlitterAppState> {
     EndSearchAction: _endSearch,
     FetchSearchAction: _fetchSearch,
     OnMessageForCurrentRoom: _onMessageForCurrentRoom,
-    UnreadMessagesForRoom: _unreadMessageForRoom
+    UnreadMessagesForRoom: _unreadMessageForRoom,
+    MarkAsReadForRoom: _markAsRead
   };
 
   @override
@@ -79,8 +80,15 @@ FlitterAppState _unreadMessageForRoom(FlitterAppState state,
   if (action.roomId != null) {
     Room room = state.rooms.firstWhere((Room room) => room.id == action.roomId,
         orElse: orElseNull);
+    if (room == null) {
+      return state;
+    }
     room.unreadItems += action.addMessage;
-    room.unreadItems -= action.removeMessage;
+    if (room.unreadItems > action.removeMessage) {
+      room.unreadItems -= action.removeMessage;
+    } else {
+      room.unreadItems = 0;
+    }
 
     List<Room> rooms =
     state.rooms.where((Room room) => room.id != action.roomId).toList();
@@ -89,6 +97,23 @@ FlitterAppState _unreadMessageForRoom(FlitterAppState state,
     return state.apply(rooms: _sortRooms(rooms));
   }
   return state;
+}
+
+FlitterAppState _markAsRead(FlitterAppState state, MarkAsReadForRoom action) {
+  if (action.messageIds != null && action.roomId == state.selectedRoom.room.id) {
+    List<Message> messages = new List.from(state.selectedRoom.messages ?? []);
+    action.messageIds.forEach((messageId) {
+      final exist =
+      messages.firstWhere((msg) => msg.id == messageId, orElse: orElseNull);
+      exist.unread = false;
+      if (exist != null) {
+        final idx = messages.indexOf(exist);
+        messages[idx] = exist;
+      }
+    });
+    final currentRoom = state.selectedRoom?.apply(messages: messages);
+    return state.apply(selectedRoom: currentRoom);
+  }
 }
 
 FlitterAppState _showSearchBar(FlitterAppState state,

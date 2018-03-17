@@ -139,3 +139,10 @@ class UnreadMessagesForRoom extends FlitterAction {
   UnreadMessagesForRoom(
       {this.roomId, this.addMessage: 0, this.removeMessage: 0});
 }
+
+class MarkAsReadForRoom extends FlitterAction {
+  final String roomId;
+  final List<String> messageIds;
+
+  MarkAsReadForRoom({this.roomId, this.messageIds});
+}

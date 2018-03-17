@@ -93,6 +93,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         if (token != null) {
           reconnectWebSocket(token.access);
         }
+        fetchRooms();
         break;
       default:
         break;

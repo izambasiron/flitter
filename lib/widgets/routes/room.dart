@@ -1,15 +1,18 @@
 library flitter.routes.room;
 
+import 'dart:async';
+
+import 'package:flitter/app.dart';
 import 'package:flitter/redux/actions.dart';
 import 'package:flitter/redux/store.dart';
 import 'package:flitter/services/flitter_request.dart';
-import 'package:gitter/gitter.dart';
 import 'package:flitter/widgets/common/chat_room.dart';
 import 'package:flutter/material.dart';
-import 'package:flitter/app.dart';
+import 'package:gitter/gitter.dart';
 import 'package:gitter/src/models/faye_message.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-enum RoomMenuAction { leave }
+enum RoomMenuAction { leave, autoMarkAsRead }
 
 class RoomView extends StatefulWidget {
   static const path = "/room";
@@ -22,10 +25,12 @@ class RoomView extends StatefulWidget {
 
 class _RoomViewState extends State<RoomView> with WidgetsBindingObserver {
   Iterable<Message> messages = flitterStore.state.selectedRoom.messages;
+  var _autoMarkAsRead = true;
 
   Room get room => flitterStore.state.selectedRoom.room;
 
   var _subscription;
+  Timer _unreadTimer;
 
   @override
   void initState() {
@@ -33,10 +38,12 @@ class _RoomViewState extends State<RoomView> with WidgetsBindingObserver {
     _subscription = flitterStore.onChange.listen((_) {
       setState(() {
         messages = flitterStore.state.selectedRoom.messages;
+        _readMessages();
       });
     });
 
     _fetchMessages();
+    _getMarkAsReadPref();
 
     gitterSubscriber.subscribeToChatMessages(room.id, _onMessageHandler);
     WidgetsBinding.instance.addObserver(this);
@@ -45,8 +52,10 @@ class _RoomViewState extends State<RoomView> with WidgetsBindingObserver {
   _onMessageHandler(List<GitterFayeMessage> msgs) {
     for (GitterFayeMessage msg in msgs) {
       String roomId = msg.channel
-          .split("/api/v1/rooms/").last
-          .split("/").first;
+          .split("/api/v1/rooms/")
+          .last
+          .split("/")
+          .first;
       if (msg.data != null && roomId == room.id) {
         switch (msg.data["operation"]) {
           case "create":
@@ -76,7 +85,9 @@ class _RoomViewState extends State<RoomView> with WidgetsBindingObserver {
 
     if (messages != null) {
       final ChatRoom chatRoom =
-          new ChatRoom(messages: messages.toList().reversed, room: room);
+      new ChatRoom(messages: messages
+          .toList()
+          .reversed, room: room);
       chatRoom.onNeedDataStream.listen((_) => _fetchMessages());
       body = chatRoom;
     } else {
@@ -100,16 +111,33 @@ class _RoomViewState extends State<RoomView> with WidgetsBindingObserver {
     }
   }
 
-  Widget _buildMenu() => new PopupMenuButton(
-      itemBuilder: (BuildContext context) => <PopupMenuItem<RoomMenuAction>>[
+  Widget _buildMenu() =>
+      new PopupMenuButton(
+          itemBuilder: (BuildContext context) =>
+          <PopupMenuEntry<RoomMenuAction>>[
             new PopupMenuItem<RoomMenuAction>(
                 value: RoomMenuAction.leave,
-                child: new Text('Leave room')) //todo: intl
+                child: const ListTile(leading: const Icon(null),
+                    title: const Text('Leave room'))),
+            const PopupMenuDivider(),
+            new CheckedPopupMenuItem<RoomMenuAction>(
+              checked: _autoMarkAsRead,
+              value: RoomMenuAction.autoMarkAsRead,
+              child: const Text('Auto mark as read'),
+            )
           ],
-          onSelected: (RoomMenuAction action) {
+          onSelected: (RoomMenuAction action) async {
             switch (action) {
               case RoomMenuAction.leave:
                 _onLeaveRoom();
+                break;
+              case RoomMenuAction.autoMarkAsRead:
+                SharedPreferences prefs = await SharedPreferences.getInstance();
+                _autoMarkAsRead = !_autoMarkAsRead;
+                prefs.setBool("autoMarkAsRead:${room.id}", _autoMarkAsRead);
+                if (_autoMarkAsRead) {
+                  _readMessages();
+                }
                 break;
             }
           });
@@ -143,6 +171,30 @@ class _RoomViewState extends State<RoomView> with WidgetsBindingObserver {
         break;
       default:
         break;
+    }
+  }
+
+  Future _getMarkAsReadPref() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    _autoMarkAsRead = prefs.getBool("autoMarkAsRead:${room.id}") ?? true;
+  }
+
+  _markAllAsRead() {
+    List<String> messageIds = messages
+        .where((message) => message.unread)
+        .map((message) => message.id).toList();
+    if (messageIds.length > 0) {
+      markMessagesAsReadOfRoom(room.id, messageIds);
+    }
+  }
+
+  _readMessages() {
+    if (_autoMarkAsRead) {
+      if (_unreadTimer != null) {
+        _unreadTimer.cancel();
+      }
+      _unreadTimer =
+      new Timer(new Duration(milliseconds: 2000), _markAllAsRead);
     }
   }
 }

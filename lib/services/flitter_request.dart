@@ -44,6 +44,14 @@ Future<Iterable<Message>> fetchMessagesOfRoom({
   return messages;
 }
 
+markMessagesAsReadOfRoom(String roomId, List<String> messageIds) async {
+  flitterStore.dispatch(new MarkAsReadForRoom(roomId: roomId,
+      messageIds: messageIds));
+  final user = flitterStore.state.user;
+  await gitterApi.user.userMarkMessagesAsReadOfRoom(user.id, roomId, messageIds);
+  fetchRooms();
+}
+
 Future<bool> leaveRoom(Room room) async {
   final success =
       await gitterApi.room.removeUserFrom(room.id, flitterStore.state.user.id);
@@ -95,7 +103,7 @@ Future<GitterFayeSubscriber> initWebSocket(String token) async {
 }
 
 reconnectWebSocket(String token) async {
-  if (gitterSubscriber.isClose || !gitterSubscriber.isTicking) {
+  if (gitterSubscriber.isClose || !gitterSubscriber.isTicking || !gitterSubscriber.isResponding) {
     await gitterSubscriber.reset();
   }
 }
@@ -112,11 +120,6 @@ subscribeToUnreadMessages(List<Room> rooms) {
             msg.data["notification"] == GitterFayeNotifications.unreadItems) {
           flitterStore.dispatch(new UnreadMessagesForRoom(
               roomId: roomId, addMessage: msg.data["items"]["chat"].length));
-        } else if (msg.data != null &&
-            msg.data["notification"] ==
-                GitterFayeNotifications.unreadItemsRemoved) {
-          flitterStore.dispatch(new UnreadMessagesForRoom(
-              roomId: roomId, removeMessage: msg.data["items"]["chat"].length));
         }
       }
     });
