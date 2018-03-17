@@ -14,6 +14,7 @@ import 'package:url_launcher/url_launcher.dart' as url_launcher;
 
 final _dateFormat = new DateFormat.MMMd()
   ..add_Hm();
+final _todayDateFormat = new DateFormat.Hm();
 
 class ChatRoom extends StatefulWidget {
   final Iterable<Message> messages;
@@ -224,8 +225,19 @@ class ChatMessageContent extends StatelessWidget {
     return new TextStyle(color: Colors.grey);
   }
 
-  TextStyle _usernameTextStyle() {
+  TextStyle _subtitleTextStyle() {
     return new TextStyle(fontSize: 12.0);
+  }
+
+  String _localDateFormat(DateTime date) {
+    final DateTime today = new DateTime.now().toLocal();
+    final localDate = date.toLocal();
+    if (localDate.day == today.day && localDate.month == today.month &&
+    localDate.year == today.year) {
+      return _todayDateFormat.format(localDate);
+    } else {
+      return _dateFormat.format(localDate);
+    }
   }
 
   @override
@@ -247,9 +259,10 @@ class ChatMessageContent extends StatelessWidget {
                           child: new Text(
                               message.fromUser.displayName, softWrap: true)),
                       new Text("@${message.fromUser.username}",
-                        style: _usernameTextStyle(),)
+                        style: _subtitleTextStyle())
                     ], crossAxisAlignment: CrossAxisAlignment.start)),
-                new Text(_dateFormat.format(message.sent.toLocal()))
+                new Text(_localDateFormat(message.sent),
+                  style: _subtitleTextStyle())
               ], crossAxisAlignment: CrossAxisAlignment.end)
                   : null)));
     }
