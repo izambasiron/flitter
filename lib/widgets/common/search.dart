@@ -1,12 +1,12 @@
 library flitter.common.search;
 
+import 'package:flitter/redux/actions.dart';
+import 'package:flitter/redux/store.dart';
+import 'package:flitter/services/flitter_request.dart';
 import 'package:flitter/widgets/common/list_room.dart';
 import 'package:flutter/material.dart';
 import 'package:gitter/gitter.dart';
 import 'package:meta/meta.dart';
-import 'package:flitter/redux/actions.dart';
-import 'package:flitter/redux/store.dart';
-import 'package:flitter/services/flitter_request.dart';
 
 class SearchBar extends StatelessWidget {
   final VoidCallback onSearchEnd;
@@ -37,8 +37,10 @@ class SearchBar extends StatelessWidget {
           onChanged: onChange,
           autofocus: true,
           decoration: new InputDecoration(
-            hintText: hintText,
+            labelText: hintText,
+            hintText: "Search for rooms or people"
           ),
+          maxLines: 1,
         ),
         backgroundColor: Theme.of(context).canvasColor,
       );
@@ -95,7 +97,8 @@ class _ScaffoldWithSearchbarState extends State<ScaffoldWithSearchbar> {
     var body;
     if (flitterStore.state.search.searching == true) {
       if (flitterStore.state.search.requesting == true) {
-        body = new Container(child: new LinearProgressIndicator());
+        body = new SizedBox(child: const LinearProgressIndicator(),
+          height: 1.0,);
       } else {
         body = _buildSearchResult();
       }
