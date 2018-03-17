@@ -227,7 +227,7 @@ class ChatMessageContent extends StatelessWidget {
                       new Expanded(
                           child: new Text(message.fromUser.displayName,
                               softWrap: true)),
-                      new Text(_dateFormat.format(message.sent))
+                      new Text(_dateFormat.format(message.sent.toLocal()))
                     ])
                   : null)));
     }

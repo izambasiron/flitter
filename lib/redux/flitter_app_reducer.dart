@@ -148,8 +148,8 @@ List<Room> _sortRooms(List<Room> rooms) {
   final readedRooms = rooms.where((Room r) => r.unreadItems == 0).toList();
   readedRooms.sort((Room a, Room b) {
     if (a.lastAccessTime != null && b.lastAccessTime != null) {
-      DateTime lA = parseLastAccessTime(a.lastAccessTime);
-      DateTime lB = parseLastAccessTime(b.lastAccessTime);
+      DateTime lA = DateTime.parse(a.lastAccessTime);
+      DateTime lB = DateTime.parse(b.lastAccessTime);
       return lB.millisecondsSinceEpoch - lA.millisecondsSinceEpoch;
     }
     return 0;
