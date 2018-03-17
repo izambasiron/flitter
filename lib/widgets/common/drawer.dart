@@ -115,8 +115,8 @@ class FlitterDrawerHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return new UserAccountsDrawerHeader(
-        accountName: new Text(flitterStore.state.user.username),
-        accountEmail: new Text(flitterStore.state.user.displayName),
+        accountEmail: new Text("@${flitterStore.state.user.username}"),
+        accountName: new Text(flitterStore.state.user.displayName),
         currentAccountPicture: new CircleAvatar(
             backgroundImage:
                 new NetworkImage(flitterStore.state.user.avatarUrlMedium)),

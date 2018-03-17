@@ -17,7 +17,7 @@ class ThemeState {
   ThemeState({this.brightness, this.primaryColor, this.accentColor})
       : _theme = new ThemeData(
             brightness: brightness,
-            primarySwatch: primaryColor,
+            primaryColor: primaryColor,
             accentColor: accentColor);
 
   factory ThemeState.initial() => new ThemeState(

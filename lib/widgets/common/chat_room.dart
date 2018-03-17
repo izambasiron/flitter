@@ -12,7 +12,8 @@ import 'package:intl/intl.dart';
 import 'package:meta/meta.dart';
 import 'package:url_launcher/url_launcher.dart' as url_launcher;
 
-final _dateFormat = new DateFormat.MMMd()..add_Hm();
+final _dateFormat = new DateFormat.MMMd()
+  ..add_Hm();
 
 class ChatRoom extends StatefulWidget {
   final Iterable<Message> messages;
@@ -39,17 +40,19 @@ class _ChatRoomWidgetState extends State<ChatRoom> {
     var children = <Widget>[
       new Flexible(
           child: new ListView.builder(
-        reverse: true,
-        itemCount: widget.messages.length,
-        itemBuilder: _buildListItem,
-      )),
+            reverse: true,
+            itemCount: widget.messages.length,
+            itemBuilder: _buildListItem,
+          )),
     ];
 
     if (_userHasJoined) {
       children.addAll([
         new Divider(height: 1.0),
         new Container(
-            decoration: new BoxDecoration(color: Theme.of(context).cardColor),
+            decoration: new BoxDecoration(color: Theme
+                .of(context)
+                .cardColor),
             child: _buildChatInput())
       ]);
     }
@@ -57,7 +60,8 @@ class _ChatRoomWidgetState extends State<ChatRoom> {
     return new Column(children: children);
   }
 
-  Widget _buildChatInput() => new ChatInput(
+  Widget _buildChatInput() =>
+      new ChatInput(
         onSubmit: (String value) async {
           sendMessage(value, widget.room);
         },
@@ -65,11 +69,16 @@ class _ChatRoomWidgetState extends State<ChatRoom> {
 
   _shouldMergeMessages(Message message, int index) =>
       index != widget.messages.length - 1 &&
-      widget.messages.elementAt(index + 1).fromUser.id == message.fromUser.id &&
-      message.sent
-              .difference(widget.messages.elementAt(index + 1).sent)
+          widget.messages
+              .elementAt(index + 1)
+              .fromUser
+              .id == message.fromUser.id &&
+          message.sent
+              .difference(widget.messages
+              .elementAt(index + 1)
+              .sent)
               .inMinutes <=
-          10;
+              10;
 
   _buildListItem(BuildContext context, int index) {
     final message = widget.messages.elementAt(index);
@@ -107,9 +116,13 @@ class _ChatInputState extends State<ChatInput> {
   Widget build(BuildContext context) {
     return new Container(
         padding: new EdgeInsets.all(8.0),
-        decoration: new BoxDecoration(color: Theme.of(context).cardColor),
+        decoration: new BoxDecoration(color: Theme
+            .of(context)
+            .cardColor),
         child: new IconTheme(
-            data: new IconThemeData(color: Theme.of(context).accentColor),
+            data: new IconThemeData(color: Theme
+                .of(context)
+                .accentColor),
             child: new Container(
                 margin: const EdgeInsets.symmetric(horizontal: 8.0),
                 child: new Row(children: [
@@ -125,7 +138,7 @@ class _ChatInputState extends State<ChatInput> {
                   new Container(
                       margin: new EdgeInsets.symmetric(horizontal: 4.0),
                       child: new IconButton(
-                          icon: new Icon(Icons.send),
+                          icon: new Icon(Icons.chat),
                           onPressed: _handleSubmitted)),
                 ]))));
   }
@@ -146,12 +159,11 @@ class ChatMessage extends StatelessWidget {
   final bool withTitle;
   final bool atBottom;
 
-  ChatMessage(
-      {@required this.message,
-      this.withDivider: true,
-      this.withAvatar: true,
-      this.withTitle: true,
-      this.atBottom: false});
+  ChatMessage({@required this.message,
+    this.withDivider: true,
+    this.withAvatar: true,
+    this.withTitle: true,
+    this.atBottom: false});
 
   @override
   Widget build(BuildContext context) {
@@ -170,7 +182,7 @@ class ChatMessage extends StatelessWidget {
     final column = <Widget>[];
 
     if (withDivider) {
-      column.add(new Divider(color: Colors.grey[200]));
+      column.add(new Divider());
     }
 
     column.add(new Padding(
@@ -192,7 +204,7 @@ class ChatMessageAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     return new Column(children: [
       new Container(
-        margin: new EdgeInsets.only(left: 12.0, right: 12.0, top: 12.0),
+        margin: new EdgeInsets.only(left: 12.0, right: 12.0, top: 4.0),
         width: 30.0,
         height: 30.0,
         child: new CircleAvatar(
@@ -212,6 +224,10 @@ class ChatMessageContent extends StatelessWidget {
     return new TextStyle(color: Colors.grey);
   }
 
+  TextStyle _usernameTextStyle() {
+    return new TextStyle(fontSize: 12.0);
+  }
+
   @override
   Widget build(BuildContext context) {
     final column = [];
@@ -224,11 +240,17 @@ class ChatMessageContent extends StatelessWidget {
               padding: new EdgeInsets.only(bottom: 6.0),
               child: withTitle
                   ? new Row(children: [
-                      new Expanded(
-                          child: new Text(message.fromUser.displayName,
-                              softWrap: true)),
-                      new Text(_dateFormat.format(message.sent.toLocal()))
-                    ])
+                new Expanded(
+                    child: new Column(children: [
+                      new Container(
+                          padding: new EdgeInsets.only(top: 4.0),
+                          child: new Text(
+                              message.fromUser.displayName, softWrap: true)),
+                      new Text("@${message.fromUser.username}",
+                        style: _usernameTextStyle(),)
+                    ], crossAxisAlignment: CrossAxisAlignment.start)),
+                new Text(_dateFormat.format(message.sent.toLocal()))
+              ], crossAxisAlignment: CrossAxisAlignment.end)
                   : null)));
     }
 
