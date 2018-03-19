@@ -33,9 +33,10 @@ Future<Iterable<Room>> fetchRoomsOfGroup() async {
 }
 
 Future<Iterable<Message>> fetchMessagesOfRoom({
-    String roomId, String beforeId, String afterId}) async {
+  String roomId, String beforeId, String afterId}) async {
   final messages =
-      await gitterApi.room.messagesFromRoomId(roomId, beforeId: beforeId, afterId: afterId);
+  await gitterApi.room.messagesFromRoomId(
+      roomId, beforeId: beforeId, afterId: afterId);
   if (afterId != null) {
     flitterStore.dispatch(new OnNewMessagesForCurrentRoom(messages));
   } else {
@@ -44,17 +45,25 @@ Future<Iterable<Message>> fetchMessagesOfRoom({
   return messages;
 }
 
+Future<Iterable<User>> fetchUsersOfRoom({
+  String roomId, int skip, int limit}) async {
+  final users = await gitterApi.room.usersFromRoomId(
+      roomId, limit: limit, skip: skip);
+  flitterStore.dispatch(new OnUsersForCurrentRoom(users));
+}
+
 markMessagesAsReadOfRoom(String roomId, List<String> messageIds) async {
   flitterStore.dispatch(new MarkAsReadForRoom(roomId: roomId,
       messageIds: messageIds));
   final user = flitterStore.state.user;
-  await gitterApi.user.userMarkMessagesAsReadOfRoom(user.id, roomId, messageIds);
+  await gitterApi.user.userMarkMessagesAsReadOfRoom(
+      user.id, roomId, messageIds);
   fetchRooms();
 }
 
 Future<bool> leaveRoom(Room room) async {
   final success =
-      await gitterApi.room.removeUserFrom(room.id, flitterStore.state.user.id);
+  await gitterApi.room.removeUserFrom(room.id, flitterStore.state.user.id);
   if (success == true) {
     flitterStore.dispatch(new LeaveRoomAction(room));
   }
@@ -63,7 +72,7 @@ Future<bool> leaveRoom(Room room) async {
 
 Future<Room> joinRoom(Room room) async {
   final joinedRoom =
-      await gitterApi.user.userJoinRoom(flitterStore.state.user.id, room.id);
+  await gitterApi.user.userJoinRoom(flitterStore.state.user.id, room.id);
   flitterStore.dispatch(new JoinRoomAction(room));
   return joinedRoom;
 }
@@ -103,14 +112,15 @@ Future<GitterFayeSubscriber> initWebSocket(String token) async {
 }
 
 reconnectWebSocket(String token) async {
-  if (gitterSubscriber.isClose || !gitterSubscriber.isTicking || !gitterSubscriber.isResponding) {
+  if (gitterSubscriber.isClose || !gitterSubscriber.isTicking ||
+      !gitterSubscriber.isResponding) {
     await gitterSubscriber.reset();
   }
 }
 
 subscribeToUnreadMessages(List<Room> rooms) {
   final newRooms =
-      rooms.map((r) => r.id).where((r) => !_mapperUnreads.contains(r)).toList();
+  rooms.map((r) => r.id).where((r) => !_mapperUnreads.contains(r)).toList();
   _mapperUnreads.addAll(newRooms);
   for (String roomId in newRooms) {
     gitterSubscriber.subscribeToUserRoomUnreadItems(

@@ -51,6 +51,7 @@ class FlitterAppReducer extends redux.ReducerClass<FlitterAppState> {
     FetchUser: _fetchUser,
     SelectRoomAction: _selectRoom,
     OnMessagesForCurrentRoom: _onMessages,
+    OnUsersForCurrentRoom: _onUsers,
     OnNewMessagesForCurrentRoom: _onNewMessages,
     OnSendMessage: _onSendMessage,
     OnDeletedMessageForCurrentRoom: _onDeletedMessageForCurrentRoom,
@@ -100,7 +101,8 @@ FlitterAppState _unreadMessageForRoom(FlitterAppState state,
 }
 
 FlitterAppState _markAsRead(FlitterAppState state, MarkAsReadForRoom action) {
-  if (action.messageIds != null && action.roomId == state.selectedRoom.room.id) {
+  if (action.messageIds != null &&
+      action.roomId == state.selectedRoom.room.id) {
     List<Message> messages = new List.from(state.selectedRoom.messages ?? []);
     action.messageIds.forEach((messageId) {
       final exist =
@@ -193,6 +195,16 @@ FlitterAppState _onMessages(FlitterAppState state,
   new List<Message>.from(state.selectedRoom.messages ?? []);
   messages.addAll(messagesRooms ?? []);
   final currentRoom = state.selectedRoom?.apply(messages: messages);
+  return state.apply(selectedRoom: currentRoom);
+}
+
+FlitterAppState _onUsers(FlitterAppState state,
+    OnUsersForCurrentRoom action) {
+  final users = new List<User>.from(action.users);
+  final usersRoom =
+  new List<User>.from(state.selectedRoom.users ?? []);
+  users.addAll(usersRoom ?? []);
+  final currentRoom = state.selectedRoom?.apply(users: users);
   return state.apply(selectedRoom: currentRoom);
 }
 

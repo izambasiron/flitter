@@ -57,6 +57,12 @@ class OnMessagesForCurrentRoom extends FlitterAction {
   OnMessagesForCurrentRoom(this.messages);
 }
 
+class OnUsersForCurrentRoom extends FlitterAction {
+  final Iterable<User> users;
+
+  OnUsersForCurrentRoom(this.users);
+}
+
 class OnNewMessagesForCurrentRoom extends FlitterAction {
   final Iterable<Message> messages;
 

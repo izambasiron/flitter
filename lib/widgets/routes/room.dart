@@ -43,6 +43,7 @@ class _RoomViewState extends State<RoomView> with WidgetsBindingObserver {
     });
 
     _fetchMessages();
+    _fetchUsers();
     _getMarkAsReadPref();
 
     gitterSubscriber.subscribeToChatMessages(room.id, _onMessageHandler);
@@ -109,6 +110,10 @@ class _RoomViewState extends State<RoomView> with WidgetsBindingObserver {
       String id = messages?.isNotEmpty == true ? messages.last.id : null;
       fetchMessagesOfRoom(roomId: room.id, afterId: id);
     }
+  }
+
+  _fetchUsers() {
+    fetchUsersOfRoom(roomId: room.id, limit: room.userCount);
   }
 
   Widget _buildMenu() =>

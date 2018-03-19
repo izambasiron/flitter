@@ -16,19 +16,19 @@ class ThemeState {
 
   ThemeState({this.brightness, this.primaryColor, this.accentColor})
       : _theme = new ThemeData(
-            brightness: brightness,
-            primaryColor: primaryColor,
-            accentColor: accentColor);
+      brightness: brightness,
+      primaryColor: primaryColor,
+      accentColor: accentColor);
 
-  factory ThemeState.initial() => new ThemeState(
-      brightness: Brightness.light,
-      primaryColor: Colors.indigo,
-      accentColor: Colors.pinkAccent);
+  factory ThemeState.initial() =>
+      new ThemeState(
+          brightness: Brightness.light,
+          primaryColor: Colors.indigo,
+          accentColor: Colors.pinkAccent);
 
-  ThemeState apply(
-      {Brightness brightness,
-      MaterialColor primaryColor,
-      MaterialAccentColor accentColor}) {
+  ThemeState apply({Brightness brightness,
+    MaterialColor primaryColor,
+    MaterialAccentColor accentColor}) {
     return new ThemeState(
         brightness: brightness ?? this.brightness,
         primaryColor: primaryColor ?? this.primaryColor,
@@ -59,12 +59,16 @@ class SearchState {
 class CurrentRoomState {
   final Room room;
   final Iterable<Message> messages;
+  final Iterable<User> users;
 
-  CurrentRoomState({this.room, this.messages});
+  CurrentRoomState({this.room, this.messages, this.users});
 
-  CurrentRoomState apply({Room room, Iterable<Message> messages}) {
+  CurrentRoomState apply(
+      {Room room, Iterable<Message> messages, Iterable<User> users}) {
     return new CurrentRoomState(
-        room: room ?? this.room, messages: messages ?? this.messages);
+        room: room ?? this.room,
+        messages: messages ?? this.messages,
+        users: users ?? this.users);
   }
 }
 
@@ -88,13 +92,12 @@ class FlitterAppState {
   final CurrentGroupState selectedGroup;
   final SearchState search;
 
-  FlitterAppState(
-      {this.rooms,
-      this.groups,
-      this.user,
-      this.search,
-      this.selectedRoom,
-      this.selectedGroup});
+  FlitterAppState({this.rooms,
+    this.groups,
+    this.user,
+    this.search,
+    this.selectedRoom,
+    this.selectedGroup});
 
   FlitterAppState.initial()
       : rooms = null,
@@ -104,16 +107,15 @@ class FlitterAppState {
         search = new SearchState.initial(),
         selectedGroup = null;
 
-  FlitterAppState apply(
-      {Iterable<Room> rooms,
-      Iterable<Group> groups,
-      User user,
-      bool init,
-      CurrentRoomState selectedRoom,
-      SearchState search,
-      CurrentGroupState selectedGroup,
-      GitterApi api,
-      GitterToken token}) {
+  FlitterAppState apply({Iterable<Room> rooms,
+    Iterable<Group> groups,
+    User user,
+    bool init,
+    CurrentRoomState selectedRoom,
+    SearchState search,
+    CurrentGroupState selectedGroup,
+    GitterApi api,
+    GitterToken token}) {
     return new FlitterAppState(
         rooms: rooms ?? this.rooms,
         groups: groups ?? this.groups,
