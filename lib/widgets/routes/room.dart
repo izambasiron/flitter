@@ -24,7 +24,8 @@ class RoomView extends StatefulWidget {
 }
 
 class _RoomViewState extends State<RoomView> with WidgetsBindingObserver {
-  Iterable<Message> messages = flitterStore.state.selectedRoom.messages;
+  Iterable<Message> get messages => flitterStore.state.selectedRoom.messages;
+  Iterable<User> get users => flitterStore.state.selectedRoom.users;
   var _autoMarkAsRead = true;
 
   Room get room => flitterStore.state.selectedRoom.room;
@@ -35,9 +36,8 @@ class _RoomViewState extends State<RoomView> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-    _subscription = flitterStore.onChange.listen((_) {
+    _subscription = flitterStore.onChange.listen((flitterAppState) {
       setState(() {
-        messages = flitterStore.state.selectedRoom.messages;
         _readMessages();
       });
     });
@@ -88,7 +88,9 @@ class _RoomViewState extends State<RoomView> with WidgetsBindingObserver {
       final ChatRoom chatRoom =
       new ChatRoom(messages: messages
           .toList()
-          .reversed, room: room);
+          .reversed,
+          users: users != null ? users.toList() : [],
+          room: room);
       chatRoom.onNeedDataStream.listen((_) => _fetchMessages());
       body = chatRoom;
     } else {

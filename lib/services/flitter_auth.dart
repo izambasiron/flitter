@@ -20,13 +20,13 @@ class FlitterAuth {
     if (tokenJson == null) {
       return null;
     }
-    return new GitterToken.fromJson(JSON.decode(tokenJson));
+    return new GitterToken.fromJson(json.decode(tokenJson));
   }
 
   static Future<bool> saveToken(GitterToken token) async {
     final prefs = await SharedPreferences.getInstance();
     prefs.setString(
-        _tokenKey, token == null ? null : JSON.encode(token?.toMap()));
+        _tokenKey, token == null ? null : json.encode(token?.toMap()));
     return prefs.commit();
   }
 

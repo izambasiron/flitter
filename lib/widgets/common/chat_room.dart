@@ -18,13 +18,15 @@ final _todayDateFormat = new DateFormat.Hm();
 
 class ChatRoom extends StatefulWidget {
   final Iterable<Message> messages;
+  final Iterable<User> users;
   final Room room;
   final _onNeedData;
+  final _showMention = false;
 
   @override
   _ChatRoomWidgetState createState() => new _ChatRoomWidgetState();
 
-  ChatRoom({@required this.messages, @required this.room})
+  ChatRoom({@required this.messages, @required this.users, @required this.room})
       : _onNeedData = new StreamController();
 
   Stream<Null> get onNeedDataStream => onNeedDataController.stream;
@@ -38,13 +40,32 @@ class _ChatRoomWidgetState extends State<ChatRoom> {
 
   @override
   Widget build(BuildContext context) {
+    var mainChatBody = <Widget>[
+      new ListView.builder(
+        reverse: true,
+        itemCount: widget.messages.length,
+        itemBuilder: _buildListItem,
+      )
+    ];
+
+    if (widget._showMention) {
+      mainChatBody.add(new Align(alignment: Alignment.bottomLeft, child:
+        new OverflowBox(
+            alignment: Alignment.bottomCenter,
+            maxHeight: 32.0 * 10.0,
+            minHeight: 0.0,
+            child:
+            new ListView.builder(
+              reverse: true,
+              itemCount: 10, //widget.users.length,
+              itemBuilder: _buildUserItem,
+            )
+        )));
+    }
+
     var children = <Widget>[
-      new Flexible(
-          child: new ListView.builder(
-            reverse: true,
-            itemCount: widget.messages.length,
-            itemBuilder: _buildListItem,
-          )),
+      new Flexible(child:
+      new Stack(children: mainChatBody))
     ];
 
     if (_userHasJoined) {
@@ -99,6 +120,27 @@ class _ChatRoomWidgetState extends State<ChatRoom> {
 
     return new ChatMessage(message: message, atBottom: index == 0);
   }
+
+  _buildUserItem(BuildContext context, int index) {
+    final user = widget.users.elementAt(index);
+
+    return
+      new Container(
+          padding: new EdgeInsets.all(8.0),
+          decoration: new BoxDecoration(color: Theme
+              .of(context)
+              .cardColor),
+          child:
+          new Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                new Text("@${user.username}"),
+                new Container(padding: new EdgeInsets.only(left: 4.0),
+                    child:
+                    new Text(user.displayName,
+                        style: new TextStyle(color: Colors.grey)))
+              ]));
+  }
 }
 
 class ChatInput extends StatefulWidget {
@@ -112,9 +154,25 @@ class ChatInput extends StatefulWidget {
 
 class _ChatInputState extends State<ChatInput> {
   final _textController = new TextEditingController();
+  final RegExp regex = new RegExp(r"(^|\s)@\S+$");
 
   @override
   Widget build(BuildContext context) {
+//    final RegExp regex = new RegExp(r"(^|\s)@\S+$");
+    _textController.addListener(onTypeMessage);
+      TextSelection selection = _textController.selection;
+      String text = _textController.text;
+//      if (selection.end == selection.start && text.isNotEmpty) {
+//        int cursor = selection.end;
+//
+//        String substring = text.substring(0, cursor);
+//        Iterable<Match> matches = regex.allMatches(substring);
+//        if (matches.length > 0) {
+//          print(matches.last.group(0));
+//        }
+//      }
+//    });
+
     return new Container(
         padding: new EdgeInsets.all(8.0),
         decoration: new BoxDecoration(color: Theme
@@ -150,6 +208,15 @@ class _ChatInputState extends State<ChatInput> {
     if (value.isNotEmpty) {
       widget.onSubmit(value);
     }
+  }
+
+  @override
+  void dispose() {
+    _textController.removeListener(onTypeMessage);
+  }
+
+  onTypeMessage() {
+
   }
 }
 
@@ -233,7 +300,7 @@ class ChatMessageContent extends StatelessWidget {
     final DateTime today = new DateTime.now().toLocal();
     final localDate = date.toLocal();
     if (localDate.day == today.day && localDate.month == today.month &&
-    localDate.year == today.year) {
+        localDate.year == today.year) {
       return _todayDateFormat.format(localDate);
     } else {
       return _dateFormat.format(localDate);
@@ -259,17 +326,16 @@ class ChatMessageContent extends StatelessWidget {
                           child: new Text(
                               message.fromUser.displayName, softWrap: true)),
                       new Text("@${message.fromUser.username}",
-                        style: _subtitleTextStyle())
+                          style: _subtitleTextStyle())
                     ], crossAxisAlignment: CrossAxisAlignment.start)),
                 new Text(_localDateFormat(message.sent),
-                  style: _subtitleTextStyle())
+                    style: _subtitleTextStyle())
               ], crossAxisAlignment: CrossAxisAlignment.end)
                   : null)));
     }
 
     column.add(new MarkdownBody(
         data: message.text.replaceAll("[![", "[["),
-        //fixme does not seem to work
         onTapLink: (String url) async {
           bool can = await url_launcher.canLaunch(url);
           if (can) {
